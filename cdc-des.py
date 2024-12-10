@@ -99,32 +99,32 @@ class Model:
         # block of code with that nurse resource held in place (and therefore
         # not usable by another patient)
         with self.clinician.request() as req:
-            # Freeze the function until the request for a customer support agent can be met.
-            # The customer is currently queuing.
+            # Freeze the function until the request for a clinician can be met.
+            # The patient is currently queuing.
             yield req
 
             # When we get to this bit of code, control has been passed back to
-            # the generator function, and therefore the request for a customer support agent has
-            # been met.  We now have the customer support agent, and have stopped queuing, so we
+            # the generator function, and therefore the request for a clinician has
+            # been met.  We now have the clinician, and have stopped queuing, so we
             # can record the current time as the time we finished queuing.
-            end_q_customer_support_agent = self.env.now
+            end_q_clinician = self.env.now
 
-            # Calculate the time this patient was queuing for the customer support agent, and
-            # record it in the customer's attribute for this.
-            customer.queue_time_customer_support_agent = end_q_customer_support_agent - start_q_customer_support_agent
+            # Calculate the time this patient was queuing for the clinician, and
+            # record it in the patient's attribute for this.
+            patient.queue_time_clinician = end_q_clinician - start_q_clinician
 
-            # Now we'll randomly sample the time this customer with the customer support agent.
+            # Now we'll randomly sample the time this patient with the clinician.
             # Here, we use an Exponential distribution for simplicity, but you
             # would typically use a Log Normal distribution for a real model
             # (we'll come back to that).  As with sampling the inter-arrival
             # times, we grab the mean from the g class, and pass in 1 / mean
             # as the lambda value.
-            sampled_customer_support_agent_activity_time = random.expovariate(1.0 /
-                                                        g.mean_customer_service_time)
+            sampled_clinician_activity_time = random.expovariate(1.0 /
+                                                        g.mean_clinician_time)
 
-            # Here we'll store the queuing time for the customer support agent and the sampled
-            # time to spend with the nurse in the results DataFrame against the
-            # ID for this customer.
+            # Here we'll store the queuing time for the clinician and the sampled
+            # time to spend with the clinician in the results DataFrame against the
+            # ID for this patient.
             #
             # In real world models, you may not want to
             # bother storing the sampled activity times - but as this is a
@@ -135,15 +135,15 @@ class Model:
             # particular cell in our DataFrame by providing the row and column.
             # Here, we specify the row as the patient ID (the index), and the
             # column for the value we want to update for that patient.
-            self.results_df.at[customer.id, "Queue Time"] = (
-                customer.queue_time_customer_support_agent)
-            self.results_df.at[customer.id, "Time with Customer Support Agent"] = (
-                sampled_customer_support_agent_activity_time)
+            self.results_df.at[patient.id, "Queue Time"] = (
+                patient.queue_time_clinician)
+            self.results_df.at[patient.id, "Time with Clinician"] = (
+                sampled_clinician_activity_time)
 
             # Freeze this function in place for the activity time we sampled
             # above.  This is the patient spending time with the customer support
             # agent.
-            yield self.env.timeout(sampled_customer_support_agent_activity_time)
+            yield self.env.timeout(sampled_clinician_activity_time)
 
             # When the time above elapses, the generator function will return
             # here.  As there's nothing more that we've written, the function
@@ -157,15 +157,15 @@ class Model:
     def calculate_run_results(self):
         # Take the mean of the queuing times for the nurse across patients in
         # this run of the model.
-        self.mean_queue_time_support_agent = self.results_df["Time with Customer Support Agent"].mean()
+        self.mean_queue_time_clinician = self.results_df["Time with Clinician"].mean()
 
     # The run method starts up the DES entity generators, runs the simulation,
     # and in turns calls anything we need to generate results for the run
     def run(self):
-        # Start up our DES entity generators that create new customers.  We've
+        # Start up our DES entity generators that create new patients.  We've
         # only got one in this model, but we'd need to do this for each one if
         # we had multiple generators.
-        self.env.process(self.generator_customer_arrivals())
+        self.env.process(self.generator_patient_arrivals())
 
         # Run the model for the duration specified in g class
         self.env.run(until=g.sim_duration)
@@ -174,7 +174,7 @@ class Model:
         # run results
         self.calculate_run_results()
 
-        # Print the run number with the customer-level results from this run of
+        # Print the run number with the patient-level results from this run of
         # the model
         print (f"Run Number {self.run_number}")
         print (self.results_df)
