@@ -1,5 +1,9 @@
-### Need to do some bringing in of packages, loading libraries etc here
-### Also some blurb about what it is we are doing
+### Need some blurb about what it is we are doing
+
+# Import packages
+import simpy
+import random
+import pandas as pd
 
 # Set up global class (numbers just placeholders for now)
 class g:
