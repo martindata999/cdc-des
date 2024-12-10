@@ -42,7 +42,8 @@ class Model:
         self.patient_counter = 0
 
         # Create a SimPy resource to represent a clinician
-        self.clinician = simpy.Resource(self.env, capacity=number_of_clinicians)
+        self.clinician = simpy.Resource(self.env, 
+                                        capacity=g.number_of_clinicians)
 
         # Store the passed in run number
         self.run_number = run_number
