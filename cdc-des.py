@@ -8,6 +8,7 @@ import pandas as pd
 # Set up global class (numbers just placeholders for now)
 class g:
     time_units_between_patient_arrivals = 5
+    mean_reception_time = 5
     mean_diagnostic_test_time = 6
     number_of_receptionists = 1
     number_of_clinicians = 1
